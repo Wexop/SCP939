@@ -2,7 +2,7 @@
   "name": "SCP939",
   "version_number": "1.0.0",
   "website_url": "https://github.com/Wexop/SCP939",
-  "description": "Add SCP939 as an enemy into the facility",
+  "description": "Add SCP939 as an enemy into the facility, be quiet..",
   "dependencies": [
     "BepInEx-BepInExPack-5.4.2100",
     "AinaVT-LethalConfig-1.4.6",

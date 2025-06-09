@@ -18,6 +18,8 @@ public class SCP939EnemyAI : EnemyAI
 
     public GameObject fogObject;
     public List<ParticleSystem> smokeParticles;
+    public AudioClip biteClip;
+    public List<AudioClip> voiceLinesClips;
 
     private float runSpeed = 6f;
     private float walkSpeed = 3.5f;
@@ -46,6 +48,8 @@ public class SCP939EnemyAI : EnemyAI
     private float detectPlayerTimer = 0f;
     private float detectPlayerDelay = 2f;
 
+    private float playRandomVoiceTimer = 0f;
+
     private Vector3 lastSearchPosition;
     private Vector3 lastNoisePosition;
 
@@ -73,6 +77,7 @@ public class SCP939EnemyAI : EnemyAI
         disableHeardSoundTimer -= Time.deltaTime;
         makeSmokeTimer -= Time.deltaTime;
         detectPlayerTimer -= Time.deltaTime;
+        playRandomVoiceTimer -= Time.deltaTime;
 
         if (detectPlayerTimer < 0)
         {
@@ -106,6 +111,12 @@ public class SCP939EnemyAI : EnemyAI
         }
 
         if (!IsServer) return;
+
+        if (playRandomVoiceTimer < 0)
+        {
+            PlayRandomVoiceLineServerRpc();
+            playRandomVoiceTimer = Random.Range(20, 45);
+        }
 
         if (aiInterval <= 0)
         {
@@ -252,6 +263,18 @@ public class SCP939EnemyAI : EnemyAI
         StartCoroutine(SmokeAnimation(fog));
     }
 
+    [ServerRpc]
+    private void PlayRandomVoiceLineServerRpc()
+    {
+        PlayRandomVoiceLineClientRpc(Random.Range(0, voiceLinesClips.Count));
+    }
+
+    [ClientRpc]
+    private void PlayRandomVoiceLineClientRpc(int index)
+    {
+        creatureVoice.PlayOneShot(voiceLinesClips[index]);
+    }
+
     private IEnumerator SmokeAnimation(GameObject fog)
     {
         yield return new WaitForSeconds(2f);
@@ -334,6 +357,7 @@ public class SCP939EnemyAI : EnemyAI
 
         if (hitPlayerTimer >= 0) return;
         creatureAnimator.SetTrigger(Attack);
+        creatureVoice.PlayOneShot(biteClip);
         base.OnCollideWithPlayer(other);
         TargetClosestPlayer();
         detectPlayerTimer = detectPlayerDelay;

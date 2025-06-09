@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -8,6 +9,7 @@ using LethalConfig;
 using LethalConfig.ConfigItems;
 using LethalConfig.ConfigItems.Options;
 using LethalLib.Modules;
+using SCP939.Scripts;
 using SCP939.Utils;
 using UnityEngine;
 
@@ -21,6 +23,9 @@ public class SCP939Plugin : BaseUnityPlugin
     private const string VERSION = "1.0.0";
 
     public static SCP939Plugin instance;
+
+    public List<SCP939EnemyAI> Scp939EnemyAisSpawned = new List<SCP939EnemyAI>();
+
     public ConfigEntry<bool> debug;
 
     public ConfigEntry<string> spawnMoonRarity;

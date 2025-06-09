@@ -43,6 +43,10 @@ public class SCP939EnemyAI : EnemyAI
     private float makeSmokeTimer = 0f;
     private float makeSmokeDelay = 30f;
 
+    private float detectPlayerTimer = 0f;
+    private float detectPlayerDelay = 2f;
+
+    private Vector3 lastSearchPosition;
     private Vector3 lastNoisePosition;
 
     public override void Start()
@@ -62,10 +66,18 @@ public class SCP939EnemyAI : EnemyAI
     {
         base.Update();
 
+        if (isEnemyDead) return;
+
         heardLastSoundTimer -= Time.deltaTime;
         hitPlayerTimer -= Time.deltaTime;
         disableHeardSoundTimer -= Time.deltaTime;
         makeSmokeTimer -= Time.deltaTime;
+        detectPlayerTimer -= Time.deltaTime;
+
+        if (detectPlayerTimer < 0)
+        {
+            targetPlayer = null;
+        }
 
         if (heardLastSoundTimer < 0f && soundHeard > 0)
         {
@@ -102,12 +114,12 @@ public class SCP939EnemyAI : EnemyAI
         }
 
         //RUNNING STATE
-        if (currentBehaviourStateIndex == 2)
+        if (currentBehaviourStateIndex == 2 && !targetPlayer)
         {
             if (agent.remainingDistance <= agent.stoppingDistance)
             {
-                lastNoisePosition = GetClosePositionToPosition(lastNoisePosition, 3);
-                SetDestinationToPosition(lastNoisePosition, true);
+                lastSearchPosition = GetClosePositionToPosition(lastNoisePosition, 4);
+                SetDestinationToPosition(lastSearchPosition, true);
             }
         }
     }
@@ -115,6 +127,7 @@ public class SCP939EnemyAI : EnemyAI
     public override void DetectNoise(Vector3 noisePosition, float noiseLoudness, int timesPlayedInOneSpot = 0,
         int noiseID = 0)
     {
+        if (isEnemyDead) return;
         if (disableHeardSoundTimer >= 0 && currentBehaviourStateIndex != 2) return;
         base.DetectNoise(noisePosition, noiseLoudness, timesPlayedInOneSpot, noiseID);
         if (!IsServer) return;
@@ -185,7 +198,11 @@ public class SCP939EnemyAI : EnemyAI
             //run to noise
             case 2:
             {
-                if (soundHeard <= 0)
+                if (targetPlayer)
+                {
+                    SetMovingTowardsTargetPlayer(targetPlayer);
+                }
+                else if (soundHeard <= 0)
                 {
                     SwitchToBehaviourState(0);
                 }
@@ -240,7 +257,7 @@ public class SCP939EnemyAI : EnemyAI
         yield return new WaitForSeconds(2f);
         smokeParticles.ForEach(p => { p.Stop(); });
 
-        yield return new WaitForSeconds(7f);
+        yield return new WaitForSeconds(8.5f);
         Destroy(fog);
     }
 
@@ -289,11 +306,15 @@ public class SCP939EnemyAI : EnemyAI
     public override void HitEnemy(int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false,
         int hitID = -1)
     {
+        if (isEnemyDead) return;
+
         creatureAnimator.SetTrigger(Hit);
         base.HitEnemy(force, playerWhoHit, playHitSFX, hitID);
-        if (isEnemyDead)
-            return;
         enemyHP -= force;
+        TargetClosestPlayer();
+        detectPlayerTimer = detectPlayerDelay;
+        soundHeard = maxSoundHeard;
+        DetectNoise(playerWhoHit.transform.position, 1);
         if (enemyHP <= 0)
         {
             KillEnemy();
@@ -303,7 +324,8 @@ public class SCP939EnemyAI : EnemyAI
     public override void KillEnemy(bool destroy = false)
     {
         base.KillEnemy(destroy);
-        creatureAnimator.SetTrigger(Die);
+        creatureAnimator.SetBool(Run, false);
+        creatureAnimator.SetBool(Die, true);
     }
 
     public override void OnCollideWithPlayer(Collider other)
@@ -313,6 +335,10 @@ public class SCP939EnemyAI : EnemyAI
         if (hitPlayerTimer >= 0) return;
         creatureAnimator.SetTrigger(Attack);
         base.OnCollideWithPlayer(other);
+        TargetClosestPlayer();
+        detectPlayerTimer = detectPlayerDelay;
+        soundHeard = maxSoundHeard;
+        DetectNoise(other.transform.position, 1);
         var player = MeetsStandardPlayerCollisionConditions(other);
         if (player)
         {

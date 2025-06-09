@@ -22,6 +22,8 @@ public class SCP939Plugin : BaseUnityPlugin
     private const string NAME = "SCP939";
     private const string VERSION = "1.0.0";
 
+    public GameObject SCP939GameObject;
+
     public static SCP939Plugin instance;
 
     public List<SCP939EnemyAI> Scp939EnemyAisSpawned = new List<SCP939EnemyAI>();
@@ -60,7 +62,7 @@ public class SCP939Plugin : BaseUnityPlugin
         //GENERAL
 
         spawnMoonRarity = Config.Bind("General", "SpawnRarity",
-            "Modded:40,ExperimentationLevel:20,AssuranceLevel:20,VowLevel:20,OffenseLevel:25,MarchLevel:25,RendLevel:30,DineLevel:30,TitanLevel:50,Adamance:50,Embrion:50,Artifice:55",
+            "Modded:50,ExperimentationLevel:40,AssuranceLevel:40,VowLevel:40,OffenseLevel:45,MarchLevel:45,RendLevel:50,DineLevel:50,TitanLevel:60,Adamance:45,Embrion:50,Artifice:60",
             "Chance for SCP 939 to spawn for any moon, example => assurance:100,offense:50 . You need to restart the game.");
         CreateStringConfig(spawnMoonRarity, true);
 
@@ -84,6 +86,8 @@ public class SCP939Plugin : BaseUnityPlugin
         Logger.LogInfo($"{creature.enemyPrefab} prefab");
         NetworkPrefabs.RegisterNetworkPrefab(creature.enemyPrefab);
         Utilities.FixMixerGroups(creature.enemyPrefab);
+
+        SCP939GameObject = creature.enemyPrefab;
 
 
         RegisterUtil.RegisterEnemyWithConfig(spawnMoonRarity.Value, creature, terminalNode, terminalKeyword,

@@ -48,22 +48,34 @@ public class SCP939EnemyAI : EnemyAI
     private float detectPlayerTimer = 0f;
     private float detectPlayerDelay = 2f;
 
-    private float playRandomVoiceTimer = 0f;
+    private float playRandomVoiceTimer = 10f;
+
+    private float disabledTimer = 2f;
 
     private Vector3 lastSearchPosition;
     private Vector3 lastNoisePosition;
+
+    private void SpawnAFriend()
+    {
+        if (SCP939Plugin.instance.Scp939EnemyAisSpawned.Count % 2 == 0) return;
+        var friend = Instantiate(SCP939Plugin.instance.SCP939GameObject, transform.position, Quaternion.identity);
+        friend.GetComponent<NetworkObject>().Spawn();
+        RoundManager.Instance.SpawnedEnemies.Add(friend.GetComponent<EnemyAI>());
+    }
 
     public override void Start()
     {
         base.Start();
 
-        walkSpeed = Random.Range(3f, 4f);
+        disabledTimer = Random.Range(0f, 2f);
 
         SCP939Plugin.instance.Scp939EnemyAisSpawned.Add(this);
 
         agent.speed = walkSpeed;
         agent.acceleration = 255f;
         agent.angularSpeed = 900f;
+
+        if (IsServer) SpawnAFriend();
     }
 
     public override void Update()
@@ -78,6 +90,7 @@ public class SCP939EnemyAI : EnemyAI
         makeSmokeTimer -= Time.deltaTime;
         detectPlayerTimer -= Time.deltaTime;
         playRandomVoiceTimer -= Time.deltaTime;
+        disabledTimer -= Time.deltaTime;
 
         if (detectPlayerTimer < 0)
         {
@@ -160,7 +173,7 @@ public class SCP939EnemyAI : EnemyAI
 
     public override void DoAIInterval()
     {
-        if (isEnemyDead) return;
+        if (isEnemyDead || disabledTimer > 0) return;
         base.DoAIInterval();
 
         switch (currentBehaviourStateIndex)
@@ -317,7 +330,7 @@ public class SCP939EnemyAI : EnemyAI
 
         SCP939Plugin.instance.Scp939EnemyAisSpawned.ToList().ForEach(s =>
         {
-            if (Vector3.Distance(s.transform.position, transform.position) < 20 && s != this)
+            if (Vector3.Distance(s.transform.position, transform.position) < 50 && s != this)
             {
                 list.Add(s);
             }
@@ -376,10 +389,11 @@ public class SCP939EnemyAI : EnemyAI
         if (isEnemyDead) return;
         if (hitPlayerTimer >= 0) return;
         base.OnCollideWithEnemy(other, collidedEnemy);
-        if (collidedEnemy)
+        if (collidedEnemy != null)
         {
+            if (collidedEnemy.enemyType.enemyName == "SCP 939") return;
             creatureAnimator.SetTrigger(Attack);
-            collidedEnemy.HitEnemy(force: 2, playHitSFX: true);
+            collidedEnemy?.HitEnemy(force: 2, playHitSFX: true);
             hitPlayerTimer = hitPlayerDelay;
         }
     }

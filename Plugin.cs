@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using BepInEx;
+using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using LethalConfig;
 using LethalConfig.ConfigItems;
@@ -32,6 +33,8 @@ public class SCP939Plugin : BaseUnityPlugin
 
     public ConfigEntry<string> spawnMoonRarity;
 
+    public bool isMirageInstalled = false;
+
 
     private void Awake()
     {
@@ -44,9 +47,16 @@ public class SCP939Plugin : BaseUnityPlugin
 
         Logger.LogInfo("SCP939 bundle found !");
 
+        if (Chainloader.PluginInfos.ContainsKey("qwbarch.Mirage"))
+        {
+            Debug.Log("Mirage mod found !");
+            isMirageInstalled = true;
+        }
+
         NetcodePatcher();
         LoadConfigs();
         RegisterMonster(bundle);
+
 
         Logger.LogInfo("SCP939 is ready!");
     }

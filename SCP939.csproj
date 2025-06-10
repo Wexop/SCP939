@@ -37,18 +37,7 @@
         <Reference Include="Mirage">
             <HintPath>..\DEPENDENCES\MIRAGE\Mirage.dll</HintPath>
         </Reference>
-        <Reference Include="Mirage.Compatibility">
-            <HintPath>..\DEPENDENCES\MIRAGE\Mirage.Compatibility.dll</HintPath>
-        </Reference>
-        <Reference Include="Mirage.Core">
-            <HintPath>..\DEPENDENCES\MIRAGE\Mirage.Core.dll</HintPath>
-        </Reference>
-        <Reference Include="Mirage.Core.Plugin">
-            <HintPath>..\DEPENDENCES\MIRAGE_CORE\Mirage.Core.Plugin.dll</HintPath>
-        </Reference>
-        <Reference Include="Mirage.Plugin">
-            <HintPath>..\DEPENDENCES\MIRAGE\Mirage.Plugin.dll</HintPath>
-        </Reference>
+        
         <Reference Include="Unity.Burst, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
             <HintPath>D:\SteamLibrary\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Burst.dll</HintPath>
         </Reference>

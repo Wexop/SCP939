@@ -21,6 +21,8 @@ public class SCP939EnemyAI : EnemyAI
     public AudioClip biteClip;
     public List<AudioClip> voiceLinesClips;
 
+    private List<SCP939MirageObject> MirageObjects = new List<SCP939MirageObject>() { };
+
     private float runSpeed = 6f;
     private float walkSpeed = 3.5f;
 
@@ -63,6 +65,15 @@ public class SCP939EnemyAI : EnemyAI
         RoundManager.Instance.SpawnedEnemies.Add(friend.GetComponent<EnemyAI>());
     }
 
+    private void SpawnMirageObjects()
+    {
+        StartOfRound.Instance.allPlayerScripts.ToList().ForEach(player =>
+        {
+            var o = Instantiate(SCP939Plugin.instance.SCP939MirageObject);
+            o.GetComponent<SCP939MirageObject>().Init(player.playerClientId);
+        });
+    }
+
     public override void Start()
     {
         base.Start();
@@ -75,7 +86,11 @@ public class SCP939EnemyAI : EnemyAI
         agent.acceleration = 255f;
         agent.angularSpeed = 900f;
 
-        if (IsServer) SpawnAFriend();
+        if (IsServer)
+        {
+            if (SCP939Plugin.instance.isMirageInstalled) SpawnMirageObjects();
+            SpawnAFriend();
+        }
     }
 
     public override void Update()

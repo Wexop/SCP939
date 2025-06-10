@@ -24,6 +24,7 @@ public class SCP939Plugin : BaseUnityPlugin
     private const string VERSION = "1.0.0";
 
     public GameObject SCP939GameObject;
+    public GameObject SCP939MirageObject;
 
     public static SCP939Plugin instance;
 
@@ -102,6 +103,12 @@ public class SCP939Plugin : BaseUnityPlugin
 
         RegisterUtil.RegisterEnemyWithConfig(spawnMoonRarity.Value, creature, terminalNode, terminalKeyword,
             creature.PowerLevel, creature.MaxCount);
+
+
+        SCP939MirageObject = bundle.LoadAsset<GameObject>("Assets/LethalCompany/Mods/SCP939/SCP939MirageObject.prefab");
+        NetworkPrefabs.RegisterNetworkPrefab(SCP939MirageObject);
+        Utilities.FixMixerGroups(SCP939MirageObject);
+        Logger.LogInfo($"{creature.name} FOUND");
     }
 
     /// <summary>

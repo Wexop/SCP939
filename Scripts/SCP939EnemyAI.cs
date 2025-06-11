@@ -21,8 +21,12 @@ public class SCP939EnemyAI : EnemyAI
     public AudioClip biteClip;
     public List<AudioClip> voiceLinesClips;
 
-    private float runSpeed = 6f;
+    public bool isChief;
+
+    private float runSpeed = 6.5f;
     private float walkSpeed = 3.5f;
+
+    private int damage = 20;
 
     private float aiInterval = 0.2f;
     private int lastBehaviorState;
@@ -63,6 +67,14 @@ public class SCP939EnemyAI : EnemyAI
         RoundManager.Instance.SpawnedEnemies.Add(friend.GetComponent<EnemyAI>());
     }
 
+    [ClientRpc]
+    private void SyncInformationClientRpc(float walk, float run, int dmg)
+    {
+        walkSpeed = walk;
+        runSpeed = run;
+        damage = dmg;
+    }
+
     public override void Start()
     {
         base.Start();
@@ -75,7 +87,18 @@ public class SCP939EnemyAI : EnemyAI
         agent.acceleration = 255f;
         agent.angularSpeed = 900f;
 
-        if (IsServer) SpawnAFriend();
+        if (IsServer)
+        {
+            SpawnAFriend();
+            if (GetChief() == null)
+            {
+                isChief = true;
+                SetChiefServerRpc(true);
+            }
+
+            SyncInformationClientRpc(SCP939Plugin.instance.walkSpeed.Value, SCP939Plugin.instance.runSpeed.Value,
+                SCP939Plugin.instance.damage.Value);
+        }
     }
 
     public override void Update()
@@ -128,7 +151,8 @@ public class SCP939EnemyAI : EnemyAI
         if (playRandomVoiceTimer < 0)
         {
             PlayRandomVoiceLineServerRpc();
-            playRandomVoiceTimer = Random.Range(20, 45);
+            playRandomVoiceTimer = Random.Range(SCP939Plugin.instance.minVoiceLineDelay.Value,
+                SCP939Plugin.instance.maxVoiceLineDelay.Value);
         }
 
         if (aiInterval <= 0)
@@ -183,11 +207,22 @@ public class SCP939EnemyAI : EnemyAI
             {
                 if (soundHeard <= 0)
                 {
-                    if (currentSearch.inProgress) break;
-                    var aiSearchRoutine = new AISearchRoutine();
-                    aiSearchRoutine.searchWidth = Random.Range(25f, 60f);
-                    aiSearchRoutine.searchPrecision = 8f;
-                    StartSearch(ChooseFarthestNodeFromPosition(transform.position, true).position, aiSearchRoutine);
+                    if (isChief)
+                    {
+                        if (currentSearch.inProgress) break;
+                        var aiSearchRoutine = new AISearchRoutine();
+                        aiSearchRoutine.searchWidth = Random.Range(25f, 60f);
+                        aiSearchRoutine.searchPrecision = 8f;
+                        StartSearch(ChooseFarthestNodeFromPosition(transform.position, true).position, aiSearchRoutine);
+                    }
+                    else
+                    {
+                        if (agent.remainingDistance <= agent.stoppingDistance)
+                        {
+                            var chief = GetChief();
+                            SetDestinationToPosition(GetClosePositionToPosition(chief.transform.position, 10), true);
+                        }
+                    }
                 }
                 else
                 {
@@ -259,6 +294,31 @@ public class SCP939EnemyAI : EnemyAI
                 break;
             }
         }
+    }
+
+    private static SCP939EnemyAI GetChief()
+    {
+        SCP939EnemyAI chief = null;
+
+        SCP939Plugin.instance.Scp939EnemyAisSpawned.ForEach(m =>
+        {
+            if (m.isChief) chief = m;
+        });
+
+        return chief;
+    }
+
+    [ServerRpc]
+    public void SetChiefServerRpc(bool value)
+    {
+        SetChiefClientRpc(value);
+    }
+
+    [ClientRpc]
+    private void SetChiefClientRpc(bool value)
+    {
+        if (SCP939Plugin.instance.debug.Value) Debug.Log($"New chief : {value}");
+        isChief = value;
     }
 
     [ServerRpc]
@@ -362,6 +422,20 @@ public class SCP939EnemyAI : EnemyAI
         base.KillEnemy(destroy);
         creatureAnimator.SetBool(Run, false);
         creatureAnimator.SetBool(Die, true);
+        SCP939Plugin.instance.Scp939EnemyAisSpawned.Remove(this);
+        if (!IsServer) return;
+        if (!isChief) return;
+        SetChiefServerRpc(false);
+        bool foundChief = false;
+        SCP939Plugin.instance.Scp939EnemyAisSpawned.ForEach(m =>
+        {
+            if (foundChief) return;
+            if (!m.isEnemyDead)
+            {
+                m.SetChiefServerRpc(true);
+                foundChief = true;
+            }
+        });
     }
 
     public override void OnCollideWithPlayer(Collider other)
@@ -376,11 +450,11 @@ public class SCP939EnemyAI : EnemyAI
         detectPlayerTimer = detectPlayerDelay;
         soundHeard = maxSoundHeard;
         DetectNoise(other.transform.position, 1);
+        hitPlayerTimer = hitPlayerDelay;
         var player = MeetsStandardPlayerCollisionConditions(other);
         if (player)
         {
-            player.DamagePlayer(20);
-            hitPlayerTimer = hitPlayerDelay;
+            player.DamagePlayer(damage);
         }
     }
 

@@ -32,6 +32,16 @@ public class SCP939Plugin : BaseUnityPlugin
     public ConfigEntry<bool> debug;
 
     public ConfigEntry<string> spawnMoonRarity;
+    public ConfigEntry<int> maxSpawn;
+    public ConfigEntry<int> powerLevel;
+
+    public ConfigEntry<int> damage;
+
+    public ConfigEntry<float> walkSpeed;
+    public ConfigEntry<float> runSpeed;
+
+    public ConfigEntry<float> minVoiceLineDelay;
+    public ConfigEntry<float> maxVoiceLineDelay;
 
     public bool isMirageInstalled = false;
 
@@ -70,11 +80,41 @@ public class SCP939Plugin : BaseUnityPlugin
     private void LoadConfigs()
     {
         //GENERAL
-
         spawnMoonRarity = Config.Bind("General", "SpawnRarity",
             "Modded:50,ExperimentationLevel:40,AssuranceLevel:40,VowLevel:40,OffenseLevel:45,MarchLevel:45,RendLevel:50,DineLevel:50,TitanLevel:60,Adamance:45,Embrion:50,Artifice:60",
             "Chance for SCP 939 to spawn for any moon, example => assurance:100,offense:50 . You need to restart the game.");
         CreateStringConfig(spawnMoonRarity, true);
+
+        maxSpawn = Config.Bind("General", "maxSpawn", 4,
+            "Max SCP939 spawn in one day");
+        CreateIntConfig(maxSpawn, 1, 30);
+
+        powerLevel = Config.Bind("General", "powerLevel", 1,
+            "SCP939 power level");
+        CreateIntConfig(maxSpawn, 1, 10);
+
+        //BEHAVIOR
+
+        damage = Config.Bind("Behavior", "damage", 20,
+            "SCP939 damage");
+        CreateIntConfig(damage);
+
+        walkSpeed = Config.Bind("Behavior", "walkSpeed", 3.5f,
+            "SCP939 walk speed");
+        CreateFloatConfig(walkSpeed, 1, 20);
+
+        runSpeed = Config.Bind("Behavior", "runSpeed", 6.5f,
+            "SCP939 run speed");
+        CreateFloatConfig(runSpeed, 1, 30);
+
+        //VOICES
+        minVoiceLineDelay = Config.Bind("Voices", "minVoiceLineDelay", 20f,
+            "Min voiceline delay");
+        CreateFloatConfig(minVoiceLineDelay, 1, 300);
+
+        maxVoiceLineDelay = Config.Bind("Voices", "maxVoiceLineDelay", 20f,
+            "Max voiceline delay");
+        CreateFloatConfig(maxVoiceLineDelay, 1, 300);
 
         //DEV
         debug = Config.Bind("Dev", "Debug", false, "Enable debug logs");
@@ -90,7 +130,8 @@ public class SCP939Plugin : BaseUnityPlugin
         TerminalKeyword terminalKeyword =
             bundle.LoadAsset<TerminalKeyword>("Assets/LethalCompany/Mods/SCP939/SCP939TerminalKeyword.asset");
 
-        creature.MaxCount = 1;
+        creature.MaxCount = maxSpawn.Value;
+        creature.PowerLevel = powerLevel.Value;
 
         Logger.LogInfo($"{creature.name} FOUND");
         Logger.LogInfo($"{creature.enemyPrefab} prefab");

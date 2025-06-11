@@ -391,7 +391,7 @@ public class SCP939EnemyAI : EnemyAI
         base.OnCollideWithEnemy(other, collidedEnemy);
         if (collidedEnemy != null)
         {
-            if (collidedEnemy.enemyType.enemyName == "SCP 939") return;
+            if (collidedEnemy.enemyType.enemyName == "SCP 939" || collidedEnemy.isEnemyDead) return;
             creatureAnimator.SetTrigger(Attack);
             collidedEnemy?.HitEnemy(force: 2, playHitSFX: true);
             hitPlayerTimer = hitPlayerDelay;

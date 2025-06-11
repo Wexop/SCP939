@@ -69,8 +69,11 @@ public class SCP939EnemyAI : EnemyAI
     {
         StartOfRound.Instance.allPlayerScripts.ToList().ForEach(player =>
         {
-            var o = Instantiate(SCP939Plugin.instance.SCP939MirageObject);
-            o.GetComponent<SCP939MirageObject>().Init(player.playerClientId);
+            var o = Instantiate(SCP939Plugin.instance.SCP939MirageObject, transform.position, Quaternion.identity);
+            var mirageObject = o.GetComponent<SCP939MirageObject>();
+            mirageObject.Init(player.playerClientId);
+            MirageObjects.Add(mirageObject);
+            if (SCP939Plugin.instance.debug.Value) Debug.Log($"ADDED MIRAGE OBJECT FOR PLAYER {player.playerClientId}");
         });
     }
 
@@ -88,7 +91,11 @@ public class SCP939EnemyAI : EnemyAI
 
         if (IsServer)
         {
-            if (SCP939Plugin.instance.isMirageInstalled) SpawnMirageObjects();
+            if (SCP939Plugin.instance.isMirageInstalled)
+            {
+                SpawnMirageObjects();
+            }
+
             SpawnAFriend();
         }
     }
@@ -160,6 +167,11 @@ public class SCP939EnemyAI : EnemyAI
                 lastSearchPosition = GetClosePositionToPosition(lastNoisePosition, 4);
                 SetDestinationToPosition(lastSearchPosition, true);
             }
+        }
+
+        if (MirageObjects.Count > 0)
+        {
+            MirageObjects.ForEach(mo => { mo.transform.position = transform.position; });
         }
     }
 
@@ -303,6 +315,24 @@ public class SCP939EnemyAI : EnemyAI
         creatureVoice.PlayOneShot(voiceLinesClips[index]);
     }
 
+    [ServerRpc(RequireOwnership = false)]
+    private void EnableVoiceServerRpc(ulong playerId)
+    {
+        if (SCP939Plugin.instance.debug.Value)
+            Debug.Log($"ENABLE AUDIO FROM ENEMY {playerId}, Mirage objects count : {MirageObjects.Count}");
+        MirageObjects.ForEach(mo =>
+        {
+            if (SCP939Plugin.instance.debug.Value)
+                Debug.Log($"MIRAGE OBJECT PLAYER : {mo.playerID}, enable it : {playerId == mo.playerID}");
+
+            if (playerId == mo.playerID)
+            {
+                mo.EnableAudioServerRpc();
+            }
+        });
+    }
+
+
     private IEnumerator SmokeAnimation(GameObject fog)
     {
         yield return new WaitForSeconds(2f);
@@ -396,6 +426,10 @@ public class SCP939EnemyAI : EnemyAI
         {
             player.DamagePlayer(20);
             hitPlayerTimer = hitPlayerDelay;
+            if (player.isPlayerDead)
+            {
+                EnableVoiceServerRpc(player.playerClientId);
+            }
         }
     }
 

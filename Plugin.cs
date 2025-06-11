@@ -46,12 +46,15 @@ public class SCP939Plugin : BaseUnityPlugin
         var assetDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "scp939");
         var bundle = AssetBundle.LoadFromFile(assetDir);
 
-        Logger.LogInfo("SCP939 bundle found !");
-
-        if (Chainloader.PluginInfos.ContainsKey("qwbarch.Mirage"))
+        try
         {
-            Debug.Log("Mirage mod found !");
+            new Mirage.Unity.MimicVoice.MimicVoice();
             isMirageInstalled = true;
+            Debug.Log("Mirage FOUND ! Add compatibility");
+        }
+        catch
+        {
+            Debug.Log("Mirage is not here...");
         }
 
         NetcodePatcher();
@@ -108,7 +111,7 @@ public class SCP939Plugin : BaseUnityPlugin
         SCP939MirageObject = bundle.LoadAsset<GameObject>("Assets/LethalCompany/Mods/SCP939/SCP939MirageObject.prefab");
         NetworkPrefabs.RegisterNetworkPrefab(SCP939MirageObject);
         Utilities.FixMixerGroups(SCP939MirageObject);
-        Logger.LogInfo($"{creature.name} FOUND");
+        Logger.LogInfo($"{SCP939MirageObject.name} FOUND");
     }
 
     /// <summary>

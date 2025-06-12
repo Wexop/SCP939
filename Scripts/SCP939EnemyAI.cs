@@ -52,6 +52,9 @@ public class SCP939EnemyAI : EnemyAI
     private float detectPlayerTimer = 0f;
     private float detectPlayerDelay = 2f;
 
+    private float maxLastWalkPosTimer = 15f;
+    private float maxLastWalkPosDelay = 15f;
+
     private float playRandomVoiceTimer = 10f;
 
     private float disabledTimer = 2f;
@@ -101,6 +104,12 @@ public class SCP939EnemyAI : EnemyAI
         }
     }
 
+    [ClientRpc]
+    private void SetDestinationClientRpc(Vector3 destination)
+    {
+        SetDestinationToPosition(destination, true);
+    }
+
     public override void Update()
     {
         base.Update();
@@ -114,6 +123,7 @@ public class SCP939EnemyAI : EnemyAI
         detectPlayerTimer -= Time.deltaTime;
         playRandomVoiceTimer -= Time.deltaTime;
         disabledTimer -= Time.deltaTime;
+        maxLastWalkPosTimer -= Time.deltaTime;
 
         if (detectPlayerTimer < 0)
         {
@@ -167,7 +177,7 @@ public class SCP939EnemyAI : EnemyAI
             if (agent.remainingDistance <= agent.stoppingDistance)
             {
                 lastSearchPosition = GetClosePositionToPosition(lastNoisePosition, 4);
-                SetDestinationToPosition(lastSearchPosition, true);
+                SetDestinationClientRpc(lastSearchPosition);
             }
         }
     }
@@ -217,10 +227,11 @@ public class SCP939EnemyAI : EnemyAI
                     }
                     else
                     {
-                        if (agent.remainingDistance <= agent.stoppingDistance)
+                        if (agent.remainingDistance <= agent.stoppingDistance || maxLastWalkPosTimer < 0)
                         {
                             var chief = GetChief();
-                            SetDestinationToPosition(GetClosePositionToPosition(chief.transform.position, 10), true);
+                            SetDestinationClientRpc(GetClosePositionToPosition(chief.transform.position, 10));
+                            maxLastWalkPosTimer = maxLastWalkPosDelay;
                         }
                     }
                 }
@@ -235,7 +246,7 @@ public class SCP939EnemyAI : EnemyAI
             //heard noise
             case 1:
             {
-                SetDestinationToPosition(lastNoisePosition);
+                SetDestinationClientRpc(lastNoisePosition);
 
                 if (Vector3.Distance(lastNoisePosition, transform.position) <= 0.1)
                 {
@@ -247,7 +258,7 @@ public class SCP939EnemyAI : EnemyAI
                 }
                 else if (soundHeard > 1)
                 {
-                    SetDestinationToPosition(lastNoisePosition);
+                    SetDestinationClientRpc(lastNoisePosition);
                     SwitchToBehaviourState(2);
                 }
 

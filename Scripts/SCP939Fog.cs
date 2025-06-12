@@ -21,7 +21,8 @@ public class SCP939Fog : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             var player = other.GetComponent<PlayerControllerB>();
-            if (player == null || player.isPlayerDead) return;
+            if (player == null || player.isPlayerDead || player.playerClientId !=
+                GameNetworkManager.Instance.localPlayerController.playerClientId) return;
             addDrunkTimer = addDrunkDelay;
             player.drunkness += 0.1f;
         }

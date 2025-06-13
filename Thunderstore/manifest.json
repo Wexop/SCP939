@@ -1,6 +1,6 @@
 {
   "name": "SCP939",
-  "version_number": "1.0.0",
+  "version_number": "1.0.1",
   "website_url": "https://github.com/Wexop/SCP939",
   "description": "Add SCP939 as an enemy into the facility, be quiet..",
   "dependencies": [

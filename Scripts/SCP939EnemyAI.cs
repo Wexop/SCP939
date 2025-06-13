@@ -421,7 +421,7 @@ public class SCP939EnemyAI : EnemyAI
         TargetClosestPlayer();
         detectPlayerTimer = detectPlayerDelay;
         soundHeard = maxSoundHeard;
-        DetectNoise(playerWhoHit.transform.position, 1);
+        DetectNoise(playerWhoHit != null ? playerWhoHit.transform.position : transform.position, 1);
         if (enemyHP <= 0)
         {
             KillEnemy();

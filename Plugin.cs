@@ -21,7 +21,7 @@ public class SCP939Plugin : BaseUnityPlugin
 {
     private const string GUID = "project_scp.scp939";
     private const string NAME = "SCP939";
-    private const string VERSION = "1.0.0";
+    private const string VERSION = "1.0.1";
 
     public GameObject SCP939GameObject;
 

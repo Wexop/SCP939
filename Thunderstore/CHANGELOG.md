@@ -1,5 +1,9 @@
 # Changelog
 
+### v1.0.2
+
+- Recompile the code to be compatible with v 73
+
 ### v1.0.1
 
 - Fix an error log when a monster hit SCP 939

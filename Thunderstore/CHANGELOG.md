@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.0.4
+
+- Recompile the code to be compatible with v 81
+
 ### v1.0.2 -> 1.0.3
 
 - Recompile the code to be compatible with v 73
